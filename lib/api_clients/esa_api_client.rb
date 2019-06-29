@@ -41,10 +41,9 @@ class EsaApiClient < MyApiClient::Base
 
   def too_many_requests(params, logger)
     logger.warn('The API limit exceeded.')
-    reset_on = params.response.headers['X-RateLimit-Reset']
-    waiting_seconds = Time.at(reset_on) - Time.current
+    waiting_seconds = params.response.headers['retry-after'].to_i + 3
     logger.warn("To be wait #{waiting_seconds} sec.")
-    sleep(waiting_seconds) if waiting_seconds.positive?
+    sleep(waiting_seconds)
     raise Errors::TooManyRequests
   end
 end
