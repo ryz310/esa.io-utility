@@ -3,6 +3,8 @@
 class EsaApiClient < MyApiClient::Base
   endpoint 'https://api.esa.io/v1/teams/feedforce'
 
+  error_handling status_code: 500..599, raise: MyApiClient::ServerError
+  error_handling status_code: 400..499, raise: MyApiClient::ClientError
   error_handling status_code: 423, with: :too_many_requests
   retry_on Errors::TooManyRequests, wait: 0.seconds
 
