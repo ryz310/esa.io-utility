@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/esa_io_utility'
+
+queries = ['user:ryosuke_sato', 'category:unsorted']
+api_client = EsaApiClient.new(access_token: ENV['ESA_IO_ACCESS_TOKEN'])
+page = 1
+begin
+  result = api_client.get_posts(*queries, page: page, per_page: 100)
+  result.posts.each do |post|
+    next if /\d{4}&#47;\d{2}&#47;\d{2}-(\d{4}&#47;)?\d{2}&#47;\d{2}/ =~ post.name # 週報
+    next unless /^(?<year>\d{4})&#47;(?<month>\d{2})&#47;(?<day>\d{2}) *(?<title>.+)/ =~ post.name
+
+    title = '今日のサトウリョウスケ' if /日報( \(\d+\))?/ =~ title
+    title = title.gsub('&#47;', '-')
+    # body = { number: post.number, name: title, category: "日報/#{year}/#{month}/#{day} (%{week})" }
+    puts({ number: post.number, name: title }.inspect)
+    api_client.update_post(
+      number: post.number,
+      name: title,
+      category: "日報/#{year}/#{month}/#{day} (%{week})"
+    )
+  end
+  page = result.next_page
+rescue MyApiClient::Error => e
+  puts e.metadata.inspect
+  return
+end while page
