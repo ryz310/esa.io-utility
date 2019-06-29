@@ -12,8 +12,8 @@ class EsaApiClient < MyApiClient::Base
     @access_token = access_token
   end
 
-  def get_posts(*search, page: nil)
-    query = { q: search.join(' ') }
+  def get_posts(*search, page: nil, par_page: 20)
+    query = { q: search.join(' '), par_page: par_page }
     query.merge!(page: page) if page.present?
     get 'posts', headers: headers, query: query
   end
