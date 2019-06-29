@@ -20,7 +20,7 @@ class EsaApiClient < MyApiClient::Base
     get 'posts', headers: headers, query: query
   end
 
-  def patch_post(number:, name:, category:, message: 'Update post.', skip_notice: true)
+  def update_post(number:, name:, category:, message: 'Update post.', skip_notice: true)
     message = "[skip notice] #{message}" if skip_notice
     body = {
       post: {
@@ -30,7 +30,7 @@ class EsaApiClient < MyApiClient::Base
       }
     }
 
-    post "posts/#{number}", headers: headers, body: body
+    patch "posts/#{number}", headers: headers, body: body
   end
 
   private
