@@ -36,7 +36,10 @@ class EsaApiClient < MyApiClient::Base
   private
 
   def headers
-    { Authorization: "Bearer #{access_token}" }
+    {
+      'Authorization': "Bearer #{access_token}",
+      'Content-Type': 'application/json',
+    }
   end
 
   def too_many_requests(params, logger)
