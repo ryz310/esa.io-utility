@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/esa_io_utility'
+
+queries = ['in:"(unsorted)/all"', 'name:"FFLT"']
+api_client = EsaApiClient.new(access_token: ENV['ESA_IO_ACCESS_TOKEN'])
+patched_posts = []
+
+page = 1
+begin
+  result = api_client.get_posts(*queries, page: page, per_page: 100)
+  result.posts.each do |post|
+    next unless /(?<prefix>.*?)(?<month>\d{1,2})月(?<day>\d{1,2})日\((?<week>[月火水木金土日])\) FFLT ?(?<suffix>.+)/ =~ post.name
+    next unless /Original created at: (?<year>\d{4})-\d{2}-\d{2}T/ =~ post.body_md
+
+    patched_post = {
+      number: post.number,
+      name: "#{prefix}#{suffix}",
+      category: "コミュニティ/FFLT/#{year}/#{sprintf('%02d', month.to_i)}/#{sprintf('%02d', day.to_i)} (#{week})",
+    }
+    patched_posts << patched_post
+  end
+  page = result.next_page
+rescue MyApiClient::Error => e
+  puts e.metadata.inspect
+  return
+end while page
+
+patched_posts.sort_by { |p| p[:category] }.each do |patched_post|
+  puts(patched_post.inspect)
+  api_client.update_post(**patched_post)
+  sleep(0.5)
+end
